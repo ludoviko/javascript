@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>URL Shortener</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+
+        }
+
+        button {
+            background-color: darkslategray;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            border-radius: 12px;;
+            margin: 0.5em;
+        }
+
+        .container {
+            background-color: beige;
+            width: 40%;
+            border-radius: 30px;;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        a:link {
+            color: red;
+        }
+
+        /* visited link */
+        a:visited {
+            color: green;
+        }
+
+        /* mouse over link */
+        a:hover {
+            color: orangered;
+        }
+
+        /* selected link */
+        a:active {
+            color: chocolate;
+        }
+
+    </style>
+</head>
+<body>
+<h1>URL Shortener</h1>
+<input  id="input-url" type="text"
+        placeholder="Enter a url"/>
+<button type="button" id="button-create">Create</button>
+<button type="button" id="button-delete">Delete</button>
+
+<p id="p1">Please enter a valid url</p>
+<div class="container">
+    <ol id="list-url" type="1"></ol>
+</div>
+
+</body>
+<script>
+    let LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const LOCALHOST = "localhost/";
+
+    document.getElementById('button-create').addEventListener("click", process);
+    document.getElementById('button-delete').addEventListener("click", deleteLinks);
+    document.getElementById('p1').style.display = "none";
+    console.log(document.getElementById('p1').innerText);
+
+    function deleteLinks(event) {
+       let links = document.getElementsByTagName("a");
+       let listItemsToBeDeleted = [];
+
+       let isAnyLink = false;
+        // localhost/KPYS8 - https:example.com1
+
+        if (document.getElementById('input-url').value === "") {
+            let orderedList = document.getElementById('list-url');
+            orderedList.replaceChildren();
+            return;
+        }
+
+        for (let i = 0; i < links.length; i++) {
+            let aLink = links[i];
+            if (aLink.getAttribute("href") === document.getElementById('input-url').value ||
+                aLink.textContent === document.getElementById('input-url').value ) {
+                listItemsToBeDeleted.push(aLink.parentNode);
+                isAnyLink = true;
+            }
+        }
+
+        let ol = document.getElementById('list-url');
+        let listItems = Array.from(ol.children);
+        for (let i = 0; i < listItemsToBeDeleted.length; i++) {
+            if (listItems.includes(listItemsToBeDeleted[i])) {
+                listItemsToBeDeleted[i].parentNode.removeChild(listItemsToBeDeleted[i]);
+            }
+        }
+    }
+
+
+    function randomUrl() {
+        let len = LETTERS.length;
+        let shorterLink = "";
+
+        for (let i = 0; i < 5; i++) {
+            let index = Math.floor(Math.random() * len);
+            shorterLink += LETTERS[index]
+        }
+
+        return LOCALHOST + shorterLink;
+    }
+
+    function process(event) {
+        let inputUrl = document.getElementById('input-url');
+        let orderedList = document.getElementById('list-url');
+
+        if (isValidUrl(inputUrl.value)) {
+            document.getElementById('p1').style.visibility = "hidden";
+
+            let randomUrlData = randomUrl();
+
+            let aLink = document.createElement("a");
+            aLink.setAttribute("href", inputUrl.value);
+            aLink.setAttribute("target", "_blank");
+            aLink.appendChild(document.createTextNode(randomUrlData));
+
+            let aSpan = document.createElement("span");
+            let textNodeSpan = document.createTextNode(" Clicks: 0");
+            aSpan.appendChild(textNodeSpan);
+
+            function onClick() {
+                let count = 0;
+
+                return function () {
+                    count++;
+                    return count;
+                };
+            }
+
+            const counter = onClick();
+
+            aLink.addEventListener("click", () => {
+                aSpan.innerHTML = " Clicks: " + counter();
+            });
+
+            let listItem = document.createElement("li");
+            let textNode = document.createTextNode(" - " + inputUrl.value);
+
+            let anEditButton = document.createElement("button");
+            anEditButton.setAttribute("type", "button")
+            anEditButton.appendChild(document.createTextNode("Edit"));
+
+            let anEditInput = null;
+            let enableEdit = true;
+
+            anEditButton.addEventListener("click", () => {
+                if (enableEdit) {
+                    anEditInput = document.createElement("input");
+                    anEditInput.setAttribute("type", "text");
+                    anEditInput.value = aLink.childNodes[0].textContent.split("/")[1];
+
+                    listItem.removeChild(aLink);
+                    listItem.prepend(anEditInput);
+
+                    anEditButton.removeChild(anEditButton.childNodes[0]);
+                    anEditButton.appendChild(document.createTextNode("Save"));
+                } else {
+                    aLink.removeChild(aLink.childNodes[0]);
+                    aLink.appendChild(document.createTextNode(LOCALHOST + anEditInput.value));
+
+                    listItem.prepend(aLink);
+                    listItem.removeChild(anEditInput);
+
+                    anEditButton.removeChild(anEditButton.childNodes[0]);
+                    anEditButton.appendChild(document.createTextNode("Edit"));
+                }
+                enableEdit = !enableEdit;
+            });
+
+            listItem.appendChild(aLink);
+            listItem.appendChild(textNode);
+            listItem.appendChild(aSpan);
+            listItem.appendChild(anEditButton);
+
+            orderedList.appendChild(listItem);
+        } else {
+            document.getElementById('p1').style.display = "";
+        }
+    }
+
+    function isValidUrl(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+</script>
+</html>
